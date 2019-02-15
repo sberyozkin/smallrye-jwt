@@ -17,18 +17,17 @@
  */
 package io.smallrye.jwt.config;
 
-import java.security.interfaces.RSAPublicKey;
 import java.util.Optional;
+
 import javax.enterprise.context.Dependent;
 import javax.enterprise.inject.Produces;
-import javax.enterprise.inject.spi.DeploymentException;
 import javax.inject.Inject;
 
-import io.smallrye.jwt.KeyUtils;
-import io.smallrye.jwt.auth.principal.DefaultJWTAuthContextInfo;
-import io.smallrye.jwt.auth.principal.JWTAuthContextInfo;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
+
+import io.smallrye.jwt.auth.principal.DefaultJWTAuthContextInfo;
+import io.smallrye.jwt.auth.principal.JWTAuthContextInfo;
 
 /**
  * A CDI provider for the JWTAuthContextInfo that obtains the necessary information from
