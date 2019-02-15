@@ -17,19 +17,9 @@
  * limitations under the License.
  *
  */
-import io.smallrye.jwt.auth.principal.JWTAuthContextInfo;
-import io.smallrye.jwt.auth.principal.JWTCallerPrincipalFactory;
-import org.eclipse.microprofile.jwt.Claims;
-import org.eclipse.microprofile.jwt.JsonWebToken;
-import org.eclipse.microprofile.jwt.tck.util.TokenUtils;
-import org.jboss.arquillian.testng.Arquillian;
-import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import static org.eclipse.microprofile.jwt.tck.TCKConstants.TEST_GROUP_JWT;
+import static org.eclipse.microprofile.jwt.tck.TCKConstants.TEST_ISSUER;
 
-import javax.json.JsonArray;
-import javax.json.JsonNumber;
-import javax.json.JsonObject;
 import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.HashMap;
@@ -38,8 +28,21 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import static org.eclipse.microprofile.jwt.tck.TCKConstants.TEST_GROUP_JWT;
-import static org.eclipse.microprofile.jwt.tck.TCKConstants.TEST_ISSUER;
+import javax.json.JsonArray;
+import javax.json.JsonNumber;
+import javax.json.JsonObject;
+
+import org.eclipse.microprofile.jwt.Claims;
+import org.eclipse.microprofile.jwt.JsonWebToken;
+import org.eclipse.microprofile.jwt.tck.util.TokenUtils;
+import org.jboss.arquillian.testng.Arquillian;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
+import io.smallrye.jwt.auth.principal.DefaultJWTAuthContextInfo;
+import io.smallrye.jwt.auth.principal.JWTAuthContextInfo;
+import io.smallrye.jwt.auth.principal.JWTCallerPrincipalFactory;
 
 /**
  * A more extensive test of the how the token JSON content types are mapped
@@ -72,9 +75,9 @@ public class TestTokenClaimTypes extends Arquillian {
             throw new IllegalStateException("Failed to load /publicKey.pem resource");
         }
 
-        JWTAuthContextInfo contextInfo = new JWTAuthContextInfo((RSAPublicKey) publicKey, TEST_ISSUER);
+        DefaultJWTAuthContextInfo contextInfo = new DefaultJWTAuthContextInfo((RSAPublicKey) publicKey, TEST_ISSUER);
         JWTCallerPrincipalFactory factory = JWTCallerPrincipalFactory.instance();
-        jwt = factory.parse(token, contextInfo);
+        jwt = factory.parse(token, contextInfo.getContextInfoProperties());
     }
 
     @Test(groups = TEST_GROUP_JWT,
@@ -236,18 +239,18 @@ public class TestTokenClaimTypes extends Arquillian {
             description = "validate the name comes from the upn claim")
     public void validateNameIsPreferredName() throws Exception {
         String token2 = TokenUtils.generateTokenString("/usePreferredName.json");
-        JWTAuthContextInfo contextInfo = new JWTAuthContextInfo((RSAPublicKey) publicKey, TEST_ISSUER);
+        DefaultJWTAuthContextInfo contextInfo = new DefaultJWTAuthContextInfo((RSAPublicKey) publicKey, TEST_ISSUER);
         JWTCallerPrincipalFactory factory = JWTCallerPrincipalFactory.instance();
-        JsonWebToken jwt2 = factory.parse(token2, contextInfo);
+        JsonWebToken jwt2 = factory.parse(token2, contextInfo.getContextInfoProperties());
         Assert.assertEquals("jdoe", jwt2.getName());
     }
     @Test(groups = TEST_GROUP_JWT,
             description = "validate the name comes from the sub claim")
     public void validateNameIsSubject() throws Exception {
         String token2 = TokenUtils.generateTokenString("/useSubject.json");
-        JWTAuthContextInfo contextInfo = new JWTAuthContextInfo((RSAPublicKey) publicKey, TEST_ISSUER);
+        DefaultJWTAuthContextInfo contextInfo = new DefaultJWTAuthContextInfo((RSAPublicKey) publicKey, TEST_ISSUER);
         JWTCallerPrincipalFactory factory = JWTCallerPrincipalFactory.instance();
-        JsonWebToken jwt2 = factory.parse(token2, contextInfo);
+        JsonWebToken jwt2 = factory.parse(token2, contextInfo.getContextInfoProperties());
         Assert.assertEquals("24400320", jwt2.getName());
     }
 }

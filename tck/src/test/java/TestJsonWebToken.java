@@ -2,14 +2,15 @@ import java.security.interfaces.RSAPublicKey;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import io.smallrye.jwt.auth.principal.JWTAuthContextInfo;
-import io.smallrye.jwt.auth.principal.JWTCallerPrincipal;
-import io.smallrye.jwt.auth.principal.JWTCallerPrincipalFactory;
-import io.smallrye.jwt.auth.principal.ParseException;
 import org.eclipse.microprofile.jwt.Claims;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.eclipse.microprofile.jwt.tck.util.TokenUtils;
 import org.testng.annotations.Test;
+
+import io.smallrye.jwt.auth.principal.DefaultJWTAuthContextInfo;
+import io.smallrye.jwt.auth.principal.JWTCallerPrincipal;
+import io.smallrye.jwt.auth.principal.JWTCallerPrincipalFactory;
+import io.smallrye.jwt.auth.principal.ParseException;
 
 /**
  * Test various parsing expectations of a JWT string into a JsonWebToken
@@ -19,7 +20,7 @@ public class TestJsonWebToken {
     public void testValidation() throws Exception {
         String token = TokenUtils.generateTokenString("/Token1.json");
         RSAPublicKey publicKey = (RSAPublicKey) TokenUtils.readPublicKey("/publicKey.pem");
-        JWTAuthContextInfo contextInfo = new JWTAuthContextInfo(publicKey, "https://server.example.com");
+        DefaultJWTAuthContextInfo contextInfo = new DefaultJWTAuthContextInfo(publicKey, "https://server.example.com");
         contextInfo.setExpGracePeriodSecs(60);
         JsonWebToken jwt = validateToken(token, contextInfo);
     }
@@ -31,7 +32,7 @@ public class TestJsonWebToken {
         invalidFields.add(TokenUtils.InvalidClaims.ISSUER);
         String token = TokenUtils.generateTokenString("/Token1.json", invalidFields);
         RSAPublicKey publicKey = (RSAPublicKey) TokenUtils.readPublicKey("/publicKey.pem");
-        JWTAuthContextInfo contextInfo = new JWTAuthContextInfo(publicKey, "https://server.example.com");
+        DefaultJWTAuthContextInfo contextInfo = new DefaultJWTAuthContextInfo(publicKey, "https://server.example.com");
         contextInfo.setExpGracePeriodSecs(60);
         JsonWebToken jwt = validateToken(token, contextInfo);
     }
@@ -43,7 +44,7 @@ public class TestJsonWebToken {
         invalidFields.add(TokenUtils.InvalidClaims.SIGNER);
         String token = TokenUtils.generateTokenString("/Token1.json", invalidFields);
         RSAPublicKey publicKey = (RSAPublicKey) TokenUtils.readPublicKey("/publicKey.pem");
-        JWTAuthContextInfo contextInfo = new JWTAuthContextInfo(publicKey, "https://server.example.com");
+        DefaultJWTAuthContextInfo contextInfo = new DefaultJWTAuthContextInfo(publicKey, "https://server.example.com");
         contextInfo.setExpGracePeriodSecs(60);
         JsonWebToken jwt = validateToken(token, contextInfo);
     }
@@ -56,7 +57,7 @@ public class TestJsonWebToken {
         invalidFields.add(TokenUtils.InvalidClaims.EXP);
         String token = TokenUtils.generateTokenString("/Token1.json", invalidFields, timeClaims);
         RSAPublicKey publicKey = (RSAPublicKey) TokenUtils.readPublicKey("/publicKey.pem");
-        JWTAuthContextInfo contextInfo = new JWTAuthContextInfo(publicKey, "https://server.example.com");
+        DefaultJWTAuthContextInfo contextInfo = new DefaultJWTAuthContextInfo(publicKey, "https://server.example.com");
         contextInfo.setExpGracePeriodSecs(60);
         JsonWebToken jwt = validateToken(token, contextInfo);
     }
@@ -70,7 +71,7 @@ public class TestJsonWebToken {
         timeClaims.put(Claims.exp.name(), exp);
         String token = TokenUtils.generateTokenString("/Token1.json", null, timeClaims);
         RSAPublicKey publicKey = (RSAPublicKey) TokenUtils.readPublicKey("/publicKey.pem");
-        JWTAuthContextInfo contextInfo = new JWTAuthContextInfo(publicKey, "https://server.example.com");
+        DefaultJWTAuthContextInfo contextInfo = new DefaultJWTAuthContextInfo(publicKey, "https://server.example.com");
         contextInfo.setExpGracePeriodSecs(60);
         JsonWebToken jwt = validateToken(token, contextInfo);
     }
@@ -83,13 +84,13 @@ public class TestJsonWebToken {
         timeClaims.put(Claims.exp.name(), exp);
         String token = TokenUtils.generateTokenString("/Token1.json", null, timeClaims);
         RSAPublicKey publicKey = (RSAPublicKey) TokenUtils.readPublicKey("/publicKey.pem");
-        JWTAuthContextInfo contextInfo = new JWTAuthContextInfo(publicKey, "https://server.example.com");
+        DefaultJWTAuthContextInfo contextInfo = new DefaultJWTAuthContextInfo(publicKey, "https://server.example.com");
         contextInfo.setExpGracePeriodSecs(60);
         JsonWebToken jwt = validateToken(token, contextInfo);
     }
-    private JsonWebToken validateToken(String token, JWTAuthContextInfo contextInfo) throws ParseException {
+    private JsonWebToken validateToken(String token, DefaultJWTAuthContextInfo contextInfo) throws ParseException {
         JWTCallerPrincipalFactory factory = JWTCallerPrincipalFactory.instance();
-        JWTCallerPrincipal callerPrincipal = factory.parse(token, contextInfo);
+        JWTCallerPrincipal callerPrincipal = factory.parse(token, contextInfo.getContextInfoProperties());
         return callerPrincipal;
     }
 

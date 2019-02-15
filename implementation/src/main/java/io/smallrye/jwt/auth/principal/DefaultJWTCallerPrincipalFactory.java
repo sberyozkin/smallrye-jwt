@@ -33,7 +33,7 @@ public class DefaultJWTCallerPrincipalFactory extends JWTCallerPrincipalFactory 
     }
 
     @Override
-    public JWTCallerPrincipal parse(final String token, final JWTAuthContextInfo authContextInfo) throws ParseException {
+    public JWTCallerPrincipal parse(final String token, final JWTAuthContextInfo jwtAuthContextMap) throws ParseException {
         JWTCallerPrincipal principal;
 
         try {
@@ -45,6 +45,8 @@ public class DefaultJWTCallerPrincipalFactory extends JWTCallerPrincipalFactory 
                             new AlgorithmConstraints(AlgorithmConstraints.ConstraintType.WHITELIST,
                                                      AlgorithmIdentifiers.RSA_USING_SHA256));
 
+            
+            DefaultJWTAuthContextInfo authContextInfo = new DefaultJWTAuthContextInfo(jwtAuthContextMap);
             if (authContextInfo.isRequireIssuer()) {
                 builder.setExpectedIssuer(true, authContextInfo.getIssuedBy());
             } else {
@@ -80,7 +82,7 @@ public class DefaultJWTCallerPrincipalFactory extends JWTCallerPrincipalFactory 
         return principal;
     }
     
-    protected List<JsonWebKey> loadJsonWebKeys(JWTAuthContextInfo authContextInfo) {
+    protected List<JsonWebKey> loadJsonWebKeys(DefaultJWTAuthContextInfo authContextInfo) {
         synchronized (this) {
             if (authContextInfo.getJwksUri() == null) {
                 return Collections.emptyList();

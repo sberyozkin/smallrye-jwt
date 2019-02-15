@@ -25,6 +25,7 @@ import javax.enterprise.inject.spi.DeploymentException;
 import javax.inject.Inject;
 
 import io.smallrye.jwt.KeyUtils;
+import io.smallrye.jwt.auth.principal.DefaultJWTAuthContextInfo;
 import io.smallrye.jwt.auth.principal.JWTAuthContextInfo;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
@@ -85,42 +86,27 @@ public class JWTAuthContextInfoProvider {
         JWTAuthContextInfo contextInfo = new JWTAuthContextInfo();
         // Look to MP-JWT values first
         if (mpJwtPublicKey.isPresent() && !NONE.equals(mpJwtPublicKey.get())) {
-            // Need to decode what this is...
-            try {
-                RSAPublicKey pk = (RSAPublicKey) KeyUtils.decodeJWKSPublicKey(mpJwtPublicKey.get());
-                contextInfo.setSignerKey(pk);
-                log.debugf("mpJwtPublicKey parsed as JWK(S)");
-            } catch (Exception e) {
-                // Try as PEM key value
-                log.debugf("mpJwtPublicKey failed as JWK(S), %s", e.getMessage());
-                try {
-                    RSAPublicKey pk = (RSAPublicKey) KeyUtils.decodePublicKey(mpJwtPublicKey.get());
-                    contextInfo.setSignerKey(pk);
-                    log.debugf("mpJwtPublicKey parsed as PEM");
-                } catch (Exception e1) {
-                    throw new DeploymentException(e1);
-                }
-            }
+            contextInfo.setProperty(DefaultJWTAuthContextInfo.MP_JWT_VERIY_PUBLIC_KEY, mpJwtPublicKey.get());
         }
 
         if (mpJwtIssuer != null && !mpJwtIssuer.equals(NONE)) {
-            contextInfo.setIssuedBy(mpJwtIssuer);
+            contextInfo.setProperty(DefaultJWTAuthContextInfo.MP_JWT_VERIY_PUBLIC_ISSUER, mpJwtIssuer);
         } else {
             // If there is no expected issuer configured, don't validate it; new in MP-JWT 1.1
-            contextInfo.setRequireIssuer(false);
+            contextInfo.setProperty(DefaultJWTAuthContextInfo.MP_JWT_VERIY_REQUIRE_ISS, false);
         }
 
         if (mpJwtRequireIss != null && mpJwtRequireIss.isPresent()) {
-            contextInfo.setRequireIssuer(mpJwtRequireIss.get());
+            contextInfo.setProperty(DefaultJWTAuthContextInfo.MP_JWT_VERIY_REQUIRE_ISS, mpJwtRequireIss.get());
         } else {
             // Default is to require iss claim
-            contextInfo.setRequireIssuer(true);
+            contextInfo.setProperty(DefaultJWTAuthContextInfo.MP_JWT_VERIY_REQUIRE_ISS, true);
         }
 
         // The MP-JWT location can be a PEM, JWK or JWKS
         if (mpJwtLocation.isPresent() && !NONE.equals(mpJwtLocation.get())) {
-            contextInfo.setJwksUri(mpJwtLocation.get());
-            contextInfo.setFollowMpJwt11Rules(true);
+            contextInfo.setProperty(DefaultJWTAuthContextInfo.JWK_KEYS_URI, mpJwtLocation.get());
+            contextInfo.setProperty(DefaultJWTAuthContextInfo.FOLLOW_MP_JWT11_RULES, true);
         }
 
         return Optional.of(contextInfo);
