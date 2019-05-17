@@ -17,19 +17,9 @@
  * limitations under the License.
  *
  */
-import io.smallrye.jwt.auth.principal.JWTAuthContextInfo;
-import io.smallrye.jwt.auth.principal.JWTCallerPrincipalFactory;
-import org.eclipse.microprofile.jwt.Claims;
-import org.eclipse.microprofile.jwt.JsonWebToken;
-import org.eclipse.microprofile.jwt.tck.util.TokenUtils;
-import org.jboss.arquillian.testng.Arquillian;
-import org.testng.Assert;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
+import static org.eclipse.microprofile.jwt.tck.TCKConstants.TEST_GROUP_JWT;
+import static org.eclipse.microprofile.jwt.tck.TCKConstants.TEST_ISSUER;
 
-import javax.json.JsonArray;
-import javax.json.JsonNumber;
-import javax.json.JsonObject;
 import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.HashMap;
@@ -38,8 +28,22 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
-import static org.eclipse.microprofile.jwt.tck.TCKConstants.TEST_GROUP_JWT;
-import static org.eclipse.microprofile.jwt.tck.TCKConstants.TEST_ISSUER;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonNumber;
+import javax.json.JsonObject;
+import javax.json.JsonString;
+
+import org.eclipse.microprofile.jwt.Claims;
+import org.eclipse.microprofile.jwt.JsonWebToken;
+import org.eclipse.microprofile.jwt.tck.util.TokenUtils;
+import org.jboss.arquillian.testng.Arquillian;
+import org.testng.Assert;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
+
+import io.smallrye.jwt.auth.principal.JWTAuthContextInfo;
+import io.smallrye.jwt.auth.principal.JWTCallerPrincipalFactory;
 
 /**
  * A more extensive test of the how the token JSON content types are mapped
@@ -165,8 +169,8 @@ public class TestTokenClaimTypes extends Arquillian {
     @Test(groups = TEST_GROUP_JWT,
             description = "validate a customString claim as String")
     public void validateCustomString() {
-        String value = jwt.getClaim("customString");
-        Assert.assertEquals("customStringValue", value);
+        JsonString value = jwt.getClaim("customString");
+        Assert.assertEquals(Json.createValue("customStringValue"), value);
     }
     @Test(groups = TEST_GROUP_JWT,
             description = "validate a customInteger claim as JsonNumber")

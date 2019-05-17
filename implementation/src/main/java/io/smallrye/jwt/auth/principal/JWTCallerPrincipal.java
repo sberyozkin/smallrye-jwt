@@ -1,8 +1,11 @@
 package io.smallrye.jwt.auth.principal;
 
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -12,6 +15,7 @@ import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import javax.json.JsonString;
 import javax.json.JsonValue;
 import javax.security.auth.Subject;
 
@@ -76,6 +80,64 @@ public abstract class JWTCallerPrincipal implements JsonWebToken {
     
     public String toString() {
         return toString(false);
+    }
+
+    public Map<String, Object> getClaimsMap() {
+        return doGetClaimsMap();
+    }
+    
+    protected Map<String, Object> doGetClaimsMap() {
+        Map<String, Object> map = new LinkedHashMap<String, Object>();
+        for (String name : getClaimNames()) {
+            map.put(name, getClaim(name));
+        }
+        return map;
+    }
+    
+    public Map<String, List<Object>> getFlatClaims() {
+        // Inspired by Jose4J, translated to the code below to support the factories
+        // which do not use Jose4j (example, Keycloak factory or the factories which do not validate locally) 
+        return doGetFlatClaims();
+    }
+
+    protected Map<String, List<Object>> doGetFlatClaims() {
+        Map<String, Object> claimsMap = getClaimsMap();
+        Map<String, List<Object>> flattenedClaims = new LinkedHashMap<>();
+        for (Map.Entry<String,Object> e : claimsMap.entrySet()) {
+            doGetFlatClaims(null, e.getKey(), e.getValue(), flattenedClaims);
+        }
+        return flattenedClaims;
+    }
+
+    @SuppressWarnings("rawtypes")
+    protected void doGetFlatClaims(String baseName, String name, Object value, Map<String,List<Object>> flattenedClaims) {
+        String key = (baseName == null ? "" : baseName + ".") + name;
+        if (value instanceof Collection) {
+            List<Object> list = new ArrayList<>();
+            for (Object item : (Collection)value) {
+                if (item instanceof Map) {
+                    doGetFlatMapClaim(key, item, flattenedClaims);
+                } else {
+                    list.add(checkJsonString(item));
+                }
+            }
+            flattenedClaims.put(key, list);
+        } else if (value instanceof Map) {
+            doGetFlatMapClaim(key, value, flattenedClaims);
+        } else {
+            flattenedClaims.put(key, Collections.singletonList(checkJsonString(value)));
+        }
+    }
+    
+    protected Object checkJsonString(Object item) {
+        return item instanceof JsonString ? ((JsonString)item).getString() : item;
+    }
+
+    protected void doGetFlatMapClaim(String key, Object value, Map<String,List<Object>> flattenedClaims) {
+        Map<?,?> mv = (Map<?,?>)value;
+        for (Map.Entry<?,?> e : mv.entrySet()) {
+            doGetFlatClaims(key, e.getKey().toString(), e.getValue(), flattenedClaims);
+        }
     }
 
     /**
@@ -187,6 +249,20 @@ public abstract class JWTCallerPrincipal implements JsonWebToken {
             jsonValue = replaceMapClaims((Map) value);
         }
         return jsonValue;
+    }
+    
+    /**
+     * Determine the custom claims in the set
+     *
+     * @param claimNames - the current set of claim names in this token
+     * @return the possibly empty set of names for non-Claims claims
+     */
+    protected Set<String> filterCustomClaimNames(Collection<String> claimNames) {
+        Set<String> customNames = new HashSet<>(claimNames);
+        for (Claims claim : Claims.values()) {
+            customNames.remove(claim.name());
+        }
+        return customNames;
     }
     
     protected Claims getClaimType(String claimName) {

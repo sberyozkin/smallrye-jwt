@@ -25,6 +25,7 @@ import java.util.Set;
 import javax.json.JsonArray;
 import javax.json.JsonNumber;
 import javax.json.JsonObject;
+import javax.json.JsonStructure;
 
 import org.eclipse.microprofile.jwt.Claims;
 import org.jboss.logging.Logger;
@@ -135,6 +136,9 @@ public class DefaultJWTCallerPrincipal extends JWTCallerPrincipal {
                 break;
             case UNKNOWN:
                 claim = claimsSet.getClaimValue(claimName);
+                if (!(claim instanceof JsonStructure)) {
+                    claim = super.wrapClaimValue(claim);
+                }
                 break;
             default:
                 claim = claimsSet.getClaimValue(claimType.name());
@@ -167,20 +171,6 @@ public class DefaultJWTCallerPrincipal extends JWTCallerPrincipal {
                 replaceNumber(name);
             }
         }
-    }
-
-    /**
-     * Determine the custom claims in the set
-     *
-     * @param claimNames - the current set of claim names in this token
-     * @return the possibly empty set of names for non-Claims claims
-     */
-    protected Set<String> filterCustomClaimNames(Collection<String> claimNames) {
-        HashSet<String> customNames = new HashSet<>(claimNames);
-        for (Claims claim : Claims.values()) {
-            customNames.remove(claim.name());
-        }
-        return customNames;
     }
 
     /**
